@@ -21,7 +21,7 @@ limpiarpantalla MACRO
     ; PARA CONFIGURAR COLOR DE LA PANTALLA
     MOV ah, 06h
     MOV al, 00H
-    mov bh,3fh ; 3= COLOR CIAN Y F COLOR BLANCO EN LAS LETRAS
+    mov bh,30h ; 3= COLOR CIAN Y 0 COLOR NEGRO EN LAS LETRAS
     mov cx,0000h
     mov dx,184fh 
     int 10h
@@ -40,15 +40,18 @@ ENDM
 
 imprimir MACRO cadena
     push_automatico
-    MOV             AX, @data            ;obtenemos la data
-    MOV             DS, AX               ;pasamos el registro AX al DS
-    MOV             AH, 09H              ;creamos la interrupcion
-    MOV             DX, offset cadena    ;obtenemos la direccion de memoria de cadena
-    INT             21H                  ; ejecutamos la interrupcion
+    MOV AX, @data ;obtenemos la data
+    MOV DS, AX ;pasamos el registro AX al DS
+    MOV AH, 09H ;creamos la interrupcion
+    MOV DX, offset cadena ;obtenemos la direccion de memoria de cadena
+    INT 21H ; ejecutamos la interrupcion
     pop_automatico
 ENDM
 
 imprimirOriginal MACRO
+    LOCAL ERROR
+    cmp existeFuncion,00H
+    JE ERROR
     add Original5[0001],30H ; regresamos el valor a codigo ascii para poder imprimir
     add Original5[0002],30H ; regresamos el valor a codigo ascii para poder imprimir
     add Original4[0001],30H ; regresamos el valor a codigo ascii para poder imprimir
@@ -92,10 +95,21 @@ imprimirOriginal MACRO
     sub Original1[0002],30H ; regresamos el valor a decimal
     sub Original0[0001],30H ; regresamos el valor a decimal
     sub Original0[0002],30H ; regresamos el valor a decimal
+    jmp Menu2
+    ERROR:
+        limpiarpantalla
+        imprimir asteriscos
+        imprimir errorExisteFuncion
+        imprimir asteriscos
+        imprimir salto
+        jmp Menu2
 
 ENDM
 
 imprimirDerivada MACRO
+    LOCAL ERROR
+    cmp existeFuncion,00H
+    JE ERROR
     add Derivada4[0001],30H ; regresamos el valor a codigo ascii para poder imprimir
     add Derivada4[0002],30H ; regresamos el valor a codigo ascii para poder imprimir
     add Derivada3[0001],30H ; regresamos el valor a codigo ascii para poder imprimir
@@ -135,10 +149,23 @@ imprimirDerivada MACRO
     sub Derivada1[0002],30H ; regresamos el valor a decimal
     sub Derivada0[0001],30H ; regresamos el valor a decimal
     sub Derivada0[0002],30H ; regresamos el valor a decimal
+    jmp Menu2
+
+    ERROR:
+        limpiarpantalla
+        imprimir asteriscos
+        imprimir errorExisteFuncion
+        imprimir asteriscos
+        imprimir salto
+        jmp Menu2
+    
 
 ENDM
 
 imprimirIntegral MACRO
+    LOCAL ERROR
+    cmp existeFuncion,00H
+    JE ERROR
     add Integrada6[0001],30H ; regresamos el valor a codigo ascii para poder imprimir
     add Integrada6[0002],30H ; regresamos el valor a codigo ascii para poder imprimir
     add Integrada5[0001],30H ; regresamos el valor a codigo ascii para poder imprimir
@@ -186,6 +213,14 @@ imprimirIntegral MACRO
     sub Integrada2[0002],30H ; regresamos el valor a decimal
     sub Integrada1[0001],30H ; regresamos el valor a decimal
     sub Integrada1[0002],30H ; regresamos el valor a decimal
+    jmp Menu2
+    ERROR:
+        limpiarpantalla
+        imprimir asteriscos
+        imprimir errorExisteFuncion
+        imprimir asteriscos
+        imprimir salto
+        jmp Menu2
 
 ENDM
 
@@ -208,6 +243,28 @@ reiniciarFuncion MACRO
     MOV Original0[0000], 002BH ;ascci +
 	MOV Original0[0001], 00H ;borrar y poner en 0
     MOV Original0[0002], 00H ;borrar y poner en 0
+    
+ENDM
+
+reiniciarTemporales MACRO
+    MOV Temporal5[0000], 002BH ;ascci +
+	MOV Temporal5[0001], 00H ;borrar y poner en 0
+    MOV Temporal5[0002], 00H ;borrar y poner en 0
+    MOV Temporal4[0000], 002BH ;ascci +
+	MOV Temporal4[0001], 00H ;borrar y poner en 0
+    MOV Temporal4[0002], 00H ;borrar y poner en 0
+    MOV Temporal3[0000], 002BH ;ascci +
+	MOV Temporal3[0001], 00H ;borrar y poner en 0
+    MOV Temporal3[0002], 00H ;borrar y poner en 0
+    MOV Temporal2[0000], 002BH ;ascci +
+	MOV Temporal2[0001], 00H ;borrar y poner en 0
+    MOV Temporal2[0002], 00H ;borrar y poner en 0
+    MOV Temporal1[0000], 002BH ;ascci +
+	MOV Temporal1[0001], 00H ;borrar y poner en 0
+    MOV Temporal1[0002], 00H ;borrar y poner en 0
+    MOV Temporal0[0000], 002BH ;ascci +
+	MOV Temporal0[0001], 00H ;borrar y poner en 0
+    MOV Temporal0[0002], 00H ;borrar y poner en 0
     
 ENDM
 
@@ -288,6 +345,7 @@ leerValorCoeficiente MACRO
         imprimir asteriscos
         imprimir mensajeError
         imprimir asteriscos
+        imprimir salto
         jmp MENU2
     
     SALIR2:
@@ -300,6 +358,7 @@ ENDM
 
 
 salir MACRO
+    imprimir mensajeSalida
     MOV AX, 4C00H ; Interrupcion para finalizar el programa
     INT 21H ; Llama a la interrupcion
 ENDM
@@ -512,7 +571,7 @@ ENDM
     ;------------------------MENSAJES A MOSTRAR------------------------------------
     ;nota los 0AH y 0DH son para nueva linea y retorno del carro
     encabezado    DB 0AH,0DH,' UNIVERSIDAD DE SAN CARLOS DE GUATEMALA',0AH,0DH,' FACULTAD DE INGENIERIA',0AH,0DH,' ESCUELA DE CIENCIAS Y SISTEMAS',0AH,0DH,' ARQUITECTURA DE COMPUTADORES Y ENSAMBLADORES 1 N',0AH,0DH, ' Practica 1 Assembler', '$'
-    MenuPrincipal DB 0AH, 0DH,0AH, 0DH,' Ingrese el numero de la opcion que desea:',0AH,0DH,' 1) Ingresar los coeficientes de la funcion', 0AH, 0DH,' 2) Imprimir la funcion almacenada',0AH,0DH,' 3) Imprimir derivada de la funcion almacenada',0AH,0DH,' 4) Imprimir antiderivada de la funcion almacenada',0AH,0DH,' 5) Graficar Funcion',0AH,0DH,' 6) Metodo de Newton',0AH,0DH,' 7) Metodo Steffensen',0AH,0DH,' 8) Metodo Muller',0AH,0DH,' 9) Salir',0AH,0DH,' ','$'
+    MenuPrincipal DB 0AH, 0DH,0AH, 0DH,' Ingrese el numero de la opcion que desea:',0AH,0DH,' 1) Ingresar los coeficientes de la funcion', 0AH, 0DH,' 2) Imprimir la funcion almacenada',0AH,0DH,' 3) Imprimir derivada de la funcion almacenada',0AH,0DH,' 4) Imprimir antiderivada de la funcion almacenada',0AH,0DH,' 5) Graficar Funcion',0AH,0DH,' 6) Metodo de Newton',0AH,0DH,' 7) Metodo Steffensen',0AH,0DH,' 8) Salir',0AH,0DH,' ','$'
     Erroropcion DB 0AH,0DH,'******************************************************',0AH,0DH,' INGRESO UNA OPCION NO EXISTENTE, VUELVA A INTENTARLO',0AH,0DH,'******************************************************',0AH,0DH,'$'
     SolicitarCoeficiente5 DB 0AH, 0DH, ' - Ingrese el coeficiente de x^5: ', '$'
     SolicitarCoeficiente4 DB 0AH, 0DH, ' - Ingrese el coeficiente de x^4: ', '$'
@@ -521,10 +580,14 @@ ENDM
     SolicitarCoeficiente1 DB 0AH, 0DH, ' - Ingrese el coeficiente de x^1: ', '$'
     SolicitarCoeficiente0 DB 0AH, 0DH, ' - Ingrese el coeficiente del termino independiente: ', '$'
 
-    asteriscos DB 0AH,0DH,'******************************************************','$'
-    iguales DB 0AH,0DH, '======================================================','$'
+    asteriscos DB 0AH,0DH,'**********************************************************************','$'
+    iguales DB 0AH,0DH, '========================================================================','$'
     salto DB 0AH,0DH,'$'
-    mensajeError DB 0AH, 0DH, ' - Coeficiente ingresado no valido ', '$'
+    opcionNoFuncional DB 0AH,0DH,' Opcion aun no funcional','$'
+    correctoIngreso DB 0AH,0DH,' Funcion guardada con exito','$'
+    mensajeSalida DB 0AH,0DH,' Ejecucion terminada con exito.....','$'
+    mensajeError DB 0AH, 0DH, ' - Coeficiente ingresado no valido, solo se permiten numeros enteros', '$'
+    errorExisteFuncion DB 0AH, 0DH, ' - No existe funcion, por favor ingrese una funcion ', '$'
     ;------------------------Variables para guardar funcion original--------------------------
     Original5 DB 002BH, 0000, 0000, '$' ; primera posicion signo, segunda posicion decena y tercera es unidad
 	Original4 DB 002BH, 0000, 0000,  '$' 
@@ -532,6 +595,13 @@ ENDM
 	Original2 DB 002BH, 0000, 0000,  '$' 
 	Original1 DB 002BH, 0000, 0000,  '$'
     Original0 DB 002BH, 0000, 0000,  '$'
+
+    Temporal5 DB 002BH, 0000, 0000, '$' ; primera posicion signo, segunda posicion decena y tercera es unidad
+	Temporal4 DB 002BH, 0000, 0000,  '$' 
+	Temporal3 DB 002BH, 0000, 0000,  '$' 
+	Temporal2 DB 002BH, 0000, 0000,  '$' 
+	Temporal1 DB 002BH, 0000, 0000,  '$'
+    Temporal0 DB 002BH, 0000, 0000,  '$'
 
     ;------------------------Variables para guardar funcion derivada--------------------------
 	Derivada4 DB 002BH, 0000, 0000,  '$' ; primera posicion signo, segunda posicion decena y tercera es unidad
@@ -561,6 +631,7 @@ ENDM
     InicioFuncionOriginal DB 0AH, 0DH,09H,'f(x) = ', '$'
     InicioFuncionDerivada DB 0AH, 0DH,09H,'f''(x) = ', '$'
     InicioFuncionIntegrada DB 0AH, 0DH,09H,'F(x) = ', '$'
+    existeFuncion DB 00H ;bandera de si existe funcion o no 
     ;--------------------------------AREA DE CODIGO----------------------------------------
 
 
@@ -570,7 +641,6 @@ ENDM
 
     ;-----------------------------MENU INICIAL-----------------------------
     MENU: 
-    
         limpiarpantalla ;llamada a la macro de limpiar pantalla
     Menu2:
         imprimir encabezado       ; imprimir encabezado
@@ -584,12 +654,19 @@ ENDM
         CMP AL, 51D ; codigo ascii de 3
         JE OPCION3 ;MOSTRAR FUNCION INTEGRADA
         CMP AL, 52D ; codigo ascii de 4
-        JE OPCION4 ;MOSTRAR FUNCION INTEGRADA
-        CMP AL, 57D ; codigo ascii de 9
-        JE OPCION9 ; Salir
+        JE MostrarIntegrada ;MOSTRAR FUNCION INTEGRADA
+        CMP AL, 53D ; codigo ascii de 5
+        JE OPCION5 ; GRAFICAR
+        CMP AL, 54D ; codigo ascii de 6
+        JE OPCION6 ; METODO 1 NEWTON
+        CMP AL, 55D ; codigo ascii de 7
+        JE OPCION7 ;METODO 2 STEFFENSEN
+        CMP AL, 56D ; codigo ascii de 8
+        JE OPCION8 ; SALIR
 
         limpiarpantalla ;en caso de error para dejar el mensaje 
         Imprimir Erroropcion
+        imprimir salto
         JMP MENU2 ; Si el caracter no es un numero entre [1,8] regresa al menu
 
     ;-----------------------------MENU INICIAL-----------------------------
@@ -601,7 +678,13 @@ ENDM
         JMP MostrarDerivada
     OPCION4:
         JMP MostrarIntegrada
-    OPCION9: 
+    OPCION5:
+        JMP Temporal
+    OPCION6:
+        JMP Temporal
+    OPCION7:
+        JMP Temporal
+    OPCION8: 
         JMP CERRAR
     ;----------------------------------SALIR------------------------------------
     CERRAR:
@@ -612,7 +695,7 @@ ENDM
     INGRESARFUNCION:
         push_automatico
         limpiarpantalla
-        reiniciarFuncion
+        reiniciarTemporales
         imprimir SolicitarCoeficiente5
         leerValorCoeficiente
         
@@ -620,11 +703,11 @@ ENDM
         ;solicitud del coeficiente 5
         xor AL,AL ; reiniciamos el registro al 
         mov AL,TextoIngresado[0000];movemos la primer posicion al AL del texto ingresado
-        mov Original5[0000],AL ; lo ingresamos en la primera pos de la variable original
+        mov Temporal5[0000],AL ; lo ingresamos en la primera pos de la variable original
         mov AL,TextoIngresado[0001];movemos la segunda posicion al AL del texto ingresado
-        mov Original5[0001],AL ; lo ingresamos en la segunda pos de la variable original
+        mov Temporal5[0001],AL ; lo ingresamos en la segunda pos de la variable original
         mov AL,TextoIngresado[0002];movemos la tercera posicion al AL del texto ingresado
-        mov Original5[0002],AL ; lo ingresamos en la tercera pos de la variable original
+        mov Temporal5[0002],AL ; lo ingresamos en la tercera pos de la variable original
 
         ;solicitud del coeficiente 4
         imprimir SolicitarCoeficiente4
@@ -632,11 +715,11 @@ ENDM
 
         xor AL,AL ; reiniciamos el registro al 
         mov AL,TextoIngresado[0000];movemos la primer posicion al AL del texto ingresado
-        mov Original4[0000],AL ; lo ingresamos en la primera pos de la variable original
+        mov Temporal4[0000],AL ; lo ingresamos en la primera pos de la variable original
         mov AL,TextoIngresado[0001];movemos la segunda posicion al AL del texto ingresado
-        mov Original4[0001],AL ; lo ingresamos en la segunda pos de la variable original
+        mov Temporal4[0001],AL ; lo ingresamos en la segunda pos de la variable original
         mov AL,TextoIngresado[0002];movemos la tercera posicion al AL del texto ingresado
-        mov Original4[0002],AL ; lo ingresamos en la tercera pos de la variable original
+        mov Temporal4[0002],AL ; lo ingresamos en la tercera pos de la variable original
 
         ;solicitud del coeficiente 3
         imprimir SolicitarCoeficiente3
@@ -644,11 +727,11 @@ ENDM
 
         xor AL,AL ; reiniciamos el registro al 
         mov AL,TextoIngresado[0000];movemos la primer posicion al AL del texto ingresado
-        mov Original3[0000],AL ; lo ingresamos en la primera pos de la variable original
+        mov Temporal3[0000],AL ; lo ingresamos en la primera pos de la variable original
         mov AL,TextoIngresado[0001];movemos la segunda posicion al AL del texto ingresado
-        mov Original3[0001],AL ; lo ingresamos en la segunda pos de la variable original
+        mov Temporal3[0001],AL ; lo ingresamos en la segunda pos de la variable original
         mov AL,TextoIngresado[0002];movemos la tercera posicion al AL del texto ingresado
-        mov Original3[0002],AL ; lo ingresamos en la tercera pos de la variable original
+        mov Temporal3[0002],AL ; lo ingresamos en la tercera pos de la variable original
 
         ;solicitud del coeficiente 2
         imprimir SolicitarCoeficiente2
@@ -656,11 +739,11 @@ ENDM
 
         xor AL,AL ; reiniciamos el registro al 
         mov AL,TextoIngresado[0000];movemos la primer posicion al AL del texto ingresado
-        mov Original2[0000],AL ; lo ingresamos en la primera pos de la variable original
+        mov Temporal2[0000],AL ; lo ingresamos en la primera pos de la variable original
         mov AL,TextoIngresado[0001];movemos la segunda posicion al AL del texto ingresado
-        mov Original2[0001],AL ; lo ingresamos en la segunda pos de la variable original
+        mov Temporal2[0001],AL ; lo ingresamos en la segunda pos de la variable original
         mov AL,TextoIngresado[0002];movemos la tercera posicion al AL del texto ingresado
-        mov Original2[0002],AL ; lo ingresamos en la tercera pos de la variable original
+        mov Temporal2[0002],AL ; lo ingresamos en la tercera pos de la variable original
 
         ;solicitud del coeficiente 1
         imprimir SolicitarCoeficiente1
@@ -668,11 +751,11 @@ ENDM
 
         xor AL,AL ; reiniciamos el registro al 
         mov AL,TextoIngresado[0000];movemos la primer posicion al AL del texto ingresado
-        mov Original1[0000],AL ; lo ingresamos en la primera pos de la variable original
+        mov Temporal1[0000],AL ; lo ingresamos en la primera pos de la variable original
         mov AL,TextoIngresado[0001];movemos la segunda posicion al AL del texto ingresado
-        mov Original1[0001],AL ; lo ingresamos en la segunda pos de la variable original
+        mov Temporal1[0001],AL ; lo ingresamos en la segunda pos de la variable original
         mov AL,TextoIngresado[0002];movemos la tercera posicion al AL del texto ingresado
-        mov Original1[0002],AL ; lo ingresamos en la tercera pos de la variable original
+        mov Temporal1[0002],AL ; lo ingresamos en la tercera pos de la variable original
 
         ;solicitud del termino independiente
         imprimir SolicitarCoeficiente0
@@ -680,39 +763,107 @@ ENDM
 
         xor AL,AL ; reiniciamos el registro al 
         mov AL,TextoIngresado[0000];movemos la primer posicion al AL del texto ingresado
-        mov Original0[0000],AL ; lo ingresamos en la primera pos de la variable original
+        mov Temporal0[0000],AL ; lo ingresamos en la primera pos de la variable original
         mov AL,TextoIngresado[0001];movemos la segunda posicion al AL del texto ingresado
-        mov Original0[0001],AL ; lo ingresamos en la segunda pos de la variable original
+        mov Temporal0[0001],AL ; lo ingresamos en la segunda pos de la variable original
         mov AL,TextoIngresado[0002];movemos la tercera posicion al AL del texto ingresado
-        mov Original0[0002],AL ; lo ingresamos en la tercera pos de la variable original
+        mov Temporal0[0002],AL ; lo ingresamos en la tercera pos de la variable original
 
+        mov existeFuncion,01H ;activamos bandera de existe funcion ya que todo salio bien al ingreso
+        
+        reiniciarFuncion
+        ; procedemos a copiar los temporales a las variables originales
+        
+        ;para coeficiente 5
+        XOR AX,AX
+        mov AL,Temporal5[0000];movemos la primer posicion al AL del texto ingresado
+        mov Original5[0000],AL ; lo ingresamos en la primera pos de la variable original
+        mov AL,Temporal5[0001];movemos la segunda posicion al AL del texto ingresado
+        mov Original5[0001],AL ; lo ingresamos en la segunda pos de la variable original
+        mov AL,Temporal5[0002];movemos la tercera posicion al AL del texto ingresado
+        mov Original5[0002],AL ; lo ingresamos en la tercera pos de la variable original
+
+        ;para coeficiente 4
+        XOR AX,AX
+        mov AL,Temporal4[0000];movemos la primer posicion al AL del texto ingresado
+        mov Original4[0000],AL ; lo ingresamos en la primera pos de la variable original
+        mov AL,Temporal4[0001];movemos la segunda posicion al AL del texto ingresado
+        mov Original4[0001],AL ; lo ingresamos en la segunda pos de la variable original
+        mov AL,Temporal4[0002];movemos la tercera posicion al AL del texto ingresado
+        mov Original4[0002],AL ; lo ingresamos en la tercera pos de la variable original
+
+        ;para coeficiente 3
+        XOR AX,AX
+        mov AL,Temporal3[0000];movemos la primer posicion al AL del texto ingresado
+        mov Original3[0000],AL ; lo ingresamos en la primera pos de la variable original
+        mov AL,Temporal3[0001];movemos la segunda posicion al AL del texto ingresado
+        mov Original3[0001],AL ; lo ingresamos en la segunda pos de la variable original
+        mov AL,Temporal3[0002];movemos la tercera posicion al AL del texto ingresado
+        mov Original3[0002],AL ; lo ingresamos en la tercera pos de la variable original
+
+        ;para coeficiente 2
+        XOR AX,AX
+        mov AL,Temporal2[0000];movemos la primer posicion al AL del texto ingresado
+        mov Original2[0000],AL ; lo ingresamos en la primera pos de la variable original
+        mov AL,Temporal2[0001];movemos la segunda posicion al AL del texto ingresado
+        mov Original2[0001],AL ; lo ingresamos en la segunda pos de la variable original
+        mov AL,Temporal2[0002];movemos la tercera posicion al AL del texto ingresado
+        mov Original2[0002],AL ; lo ingresamos en la tercera pos de la variable original
+
+        ;para coeficiente 1
+        XOR AX,AX
+        mov AL,Temporal1[0000];movemos la primer posicion al AL del texto ingresado
+        mov Original1[0000],AL ; lo ingresamos en la primera pos de la variable original
+        mov AL,Temporal1[0001];movemos la segunda posicion al AL del texto ingresado
+        mov Original1[0001],AL ; lo ingresamos en la segunda pos de la variable original
+        mov AL,Temporal1[0002];movemos la tercera posicion al AL del texto ingresado
+        mov Original1[0002],AL ; lo ingresamos en la tercera pos de la variable original
+
+        ;para coeficiente 0
+        XOR AX,AX
+        mov AL,Temporal0[0000];movemos la primer posicion al AL del texto ingresado
+        mov Original0[0000],AL ; lo ingresamos en la primera pos de la variable original
+        mov AL,Temporal0[0001];movemos la segunda posicion al AL del texto ingresado
+        mov Original0[0001],AL ; lo ingresamos en la segunda pos de la variable original
+        mov AL,Temporal0[0002];movemos la tercera posicion al AL del texto ingresado
+        mov Original0[0002],AL ; lo ingresamos en la tercera pos de la variable original
+        
         derivar
         integrar
         pop_automatico
-        jmp MENU
+        limpiarpantalla
+        imprimir asteriscos
+        imprimir correctoIngreso
+        imprimir asteriscos
+        imprimir salto
+        jmp MENU2
     ;----------------------------------Ingreso de Funcion------------------------------------
 	
     ;---------------------------Impresion de Funcion Almacenada------------------------------
     MostrarOriginal:
         limpiarpantalla
         imprimirOriginal
-        jmp MENU2
     ;---------------------------Impresion de Funcion Almacenada------------------------------
 
     ;---------------------------Impresion de Funcion Derivada------------------------------
     MostrarDerivada:
         limpiarpantalla
         imprimirDerivada
-        jmp MENU2
     ;---------------------------Impresion de Funcion Derivada------------------------------
 
     ;---------------------------Impresion de Funcion Integrada------------------------------
     MostrarIntegrada:
         limpiarpantalla
         imprimirIntegral
-        jmp MENU2
     ;---------------------------Impresion de Funcion Integrada------------------------------
 
+    Temporal:
+        limpiarpantalla
+        imprimir asteriscos
+        imprimir opcionNoFuncional
+        imprimir asteriscos
+        imprimir salto
+        jmp Menu2
     
     .exit
     main ENDP
