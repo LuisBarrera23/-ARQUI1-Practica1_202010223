@@ -654,7 +654,7 @@ ENDM
         CMP AL, 51D ; codigo ascii de 3
         JE OPCION3 ;MOSTRAR FUNCION INTEGRADA
         CMP AL, 52D ; codigo ascii de 4
-        JE MostrarIntegrada ;MOSTRAR FUNCION INTEGRADA
+        JE OPCION4 ;MOSTRAR FUNCION INTEGRADA
         CMP AL, 53D ; codigo ascii de 5
         JE OPCION5 ; GRAFICAR
         CMP AL, 54D ; codigo ascii de 6
